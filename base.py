@@ -46,7 +46,7 @@ class Airdrop(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     account = Column(String(64), index=True, nullable=False)
     # 空投金额
-    amount = Column(Integer, nullable=False)
+    amount = Column(DECIMAL(64, 18), nullable=False)
     # 0是未空投 1是空投中 3是失败 4是成功  10是异常 100是没有asset_hub手续费
     status = Column(Integer, nullable=False, index=True)
     # 签名人
