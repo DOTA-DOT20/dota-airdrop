@@ -47,7 +47,7 @@ class Airdrop(Base):
     account = Column(String(64), index=True, nullable=False)
     # 空投金额
     amount = Column(DECIMAL(64, 18), nullable=False)
-    # 0是未空投 1是空投中 3是失败 4是成功  10是异常 100是没有asset_hub手续费
+    # 0是确认链上有手续费并且未空投 1是确认链上没有手续费 3是失败 4是成功  10是异常 100是没有asset_hub手续费并且还没有检查链上
     status = Column(Integer, nullable=False, index=True)
     # 签名人
     signer = Column(String(64), index=True, nullable=True)
