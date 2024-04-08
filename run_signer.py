@@ -42,7 +42,7 @@ async def get_extrinsic(keypair: Keypair, session: AsyncSession, user_withdraws,
                 call_params= {
                     "id": 18,
                     "beneficiary": user_withdraw.account,
-                    "amount": int(user_withdraw.amount)
+                    "amount": int(user_withdraw.amount * 10000)
                 }
             )
 
