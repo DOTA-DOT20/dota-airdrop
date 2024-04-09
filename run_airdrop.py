@@ -96,42 +96,56 @@ def submit_extrinsic(substrate: SubstrateInterface, sign: dict, wait_for_inclusi
 
 
 async def submit_extrinsic_do(session: AsyncSession, substrate: SubstrateInterface):
+    # try:
+    # 查询未发送的离线签名
+    status = 10
+    stmt = select(Airdrop).where(Airdrop.status == 101)
+    extrinsic = await session.scalar(stmt)
+    if extrinsic is None:
+        print("没有等待发送的签名交易")
+        return None
+    extrinsic_hash = extrinsic.extrinsic_hash
+    data = extrinsic.signature
+    fail_reason = ""
     try:
-        # 查询未发送的离线签名
-        status = 10
-        stmt = select(Airdrop).where(Airdrop.status == 101).with_for_update(read=False, nowait=False)
-        extrinsic = await session.scalar(stmt)
-        if extrinsic is None:
-            print("没有等待发送的签名交易")
-            return None
+        print("extrinsic:", extrinsic_hash)
+        receipt = submit_extrinsic(substrate, {"data": data, "extrinsic_hash":
+                    extrinsic_hash}, wait_for_inclusion=True, wait_for_finalization=True)
+        print("回执是: ", receipt)
+        print(receipt.triggered_events)
 
-        try:
-            print("extrinsic:", extrinsic.extrinsic_hash)
-            receipt = submit_extrinsic(substrate, {"data": extrinsic.signature, "extrinsic_hash":
-                        extrinsic.extrinsic_hash}, wait_for_inclusion=True, wait_for_finalization=True)
-            print("回执是: ", receipt)
+        if receipt.is_success:
+            status = 4
+        else:
+            status = 3
+            fail_reason = str(receipt.error_message)[:40]
+            print("交易回执错误信息:", receipt.error_message)
 
-            if receipt.is_success:
-                status = 4
-            else:
-                status = 3
-                extrinsic.fail_reason = str(receipt.error_message)[:40]
-                print("交易回执错误信息:", receipt.error_message)
-
-        except (SubstrateRequestException, WebSocketConnectionClosedException, WebSocketTimeoutException, SSLEOFError, SSLError) as e:
-            print(e)
-            raise e
-
-        except (Exception, KeyboardInterrupt) as e:
-            print("离线提交出现异常：", e)
-            extrinsic.fail_reason = str(e)[:40]
-            extrinsic.status = status
-            return None
-        extrinsic.status = status
-
-    except Exception as e:
-        print(f"离线签名提交失败， 可能是网络或者其他问题导致， {e}")
+    except (WebSocketConnectionClosedException, WebSocketTimeoutException, SSLEOFError, SSLError) as e:
+        print(e)
         raise e
+
+    except (Exception, KeyboardInterrupt) as e:
+
+        print("离线提交出现异常：", e)
+        stmt = select(Airdrop).where(Airdrop.extrinsic_hash == extrinsic_hash)
+        result = await session.scalars(stmt)
+        for r in result:
+            r.fail_reason = str(e)[:40]
+            r.status = status
+        return None
+    # except Exception as e:
+
+
+    stmt = select(Airdrop).where(Airdrop.extrinsic_hash == extrinsic_hash)
+    result = await session.scalars(stmt)
+    for r in result:
+        r.fail_reason = fail_reason
+        r.status = status
+
+    # except Exception as e:
+    #     print(f"离线签名提交失败， 可能是网络或者其他问题导致， {e}")
+    #     raise e
 
 
 async def main():
@@ -141,7 +155,7 @@ async def main():
             async with async_session() as session:
                 async with session.begin():
                     await submit_extrinsic_do(session, substrate)
-        except (SubstrateRequestException, WebSocketConnectionClosedException, WebSocketTimeoutException, SSLEOFError, SSLError) as e:
+        except (WebSocketConnectionClosedException, WebSocketTimeoutException, SSLEOFError, SSLError) as e:
             try:
                 substrate = connect_substrate()
             except Exception as e:

@@ -59,8 +59,7 @@ class Airdrop(Base):
     creat_time = Column(DateTime(timezone=True), nullable=False, default=func.now())
     update_time = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
 
-    __table_args__ = (UniqueConstraint('extrinsic_hash', name='unique_hash'),
-                      UniqueConstraint('account', name='unique_account')
+    __table_args__ = (UniqueConstraint('account', name='unique_account'),
                       )
 
 

@@ -35,6 +35,7 @@ async def get_extrinsic(keypair: Keypair, session: AsyncSession, user_withdraws,
     users = []
     try:
         for user_withdraw in user_withdraws:
+            print("user: ", user_withdraw.account)
 
             user_transfer_call = substrate.compose_call(
                 call_module="Assets",
@@ -104,8 +105,8 @@ async def main():
                         print("该用户已经有签名的交易，需要等待发送")
                         continue
                     stmt = select(Airdrop).where(Airdrop.status == 0) \
-                        .offest(0) \
-                        .limit(50) \
+                        .offset(0) \
+                        .limit(25) \
                         .with_for_update(read=False, nowait=False)
                     user_withdraws = await session.scalars(stmt)
                     await get_extrinsic(keypair, session, user_withdraws, substrate)
