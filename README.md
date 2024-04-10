@@ -5,14 +5,9 @@
 
 # 设置环境变量
 ```bash
-export CHAIN="Polkadot Asset Hub"
-export URL="wss://polkadot-asset-hub-rpc.polkadot.io"
-
-export HOST=localhost
-export MYSQLUSER="root"
-export PASSWORD="password"
-export DATABASE="airdrop"
+cp .env.test .env
 ```
+然后在.env文件中修改环境变量
 # 跑签名程序
 ```bash
 python3 run_signer.py
