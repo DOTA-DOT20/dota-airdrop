@@ -25,4 +25,4 @@ async def get_no_fee_amount():
 
 
 if __name__ == "__main__":
-    asyncio.run(get_no_fee_amount(), debug=True)
+    asyncio.run(main(), debug=True)
