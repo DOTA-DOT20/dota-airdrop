@@ -1,3 +1,6 @@
+# 导入原始数据
+把项目主目录下的`airdrop.sql`文件导入mysql数据库中
+
 # 安装依赖
  ```bash
  pip install -r requirements.txt
