@@ -22,15 +22,18 @@ from websocket import WebSocketConnectionClosedException, WebSocketTimeoutExcept
 
 
 def get_user_dota_amount(user: str, substrate: SubstrateInterface):
+    amt = 0
     result = substrate.query(
         module='Assets',
         storage_function='Account',
         params=[18, user]
     )
-    print(result.value["balance"])
+    if result is not None:
+        amt = result.value["balance"]
+    return amt
 
 
 if __name__ == "__main__":
-    user = "16YCoBvDSrDLbi3YsNPBLEmQZMkScz8a1yBQh5N1YsESdhAT"
+    user = "1369PfnZydyZeNfKBFSa39w96ZkYqE8cEns4vTNVBq6sQwN9"
     s = connect_substrate()
     get_user_dota_amount(user, s)
