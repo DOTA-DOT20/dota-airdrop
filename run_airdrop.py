@@ -157,6 +157,7 @@ async def main():
                     extrinsic = await session.scalar(stmt)
                     if extrinsic is None:
                         print("没有等待发送的签名交易")
+                        time.sleep(6)
                         continue
                     extrinsic_hash = extrinsic.extrinsic_hash
                     data = extrinsic.signature
