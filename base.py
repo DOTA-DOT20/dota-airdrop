@@ -63,3 +63,16 @@ class Airdrop(Base):
                       )
 
 
+# 空投表
+class AlreadyAirdrop(Base):
+    __tablename__ = "already_airdrop"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    account = Column(String(64), index=True, nullable=False)
+    # 空投金额
+    amount = Column(DECIMAL(64, 18), nullable=False)
+    extrinsic_hash = Column(String(66), nullable=True, index=True)
+    creat_time = Column(DateTime(timezone=True), nullable=False, default=func.now())
+    update_time = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
+
+    __table_args__ = (UniqueConstraint('account', name='unique_account'),)

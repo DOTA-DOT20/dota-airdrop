@@ -23,7 +23,7 @@ from websocket import WebSocketConnectionClosedException, WebSocketTimeoutExcept
 load_dotenv()
 
 
-def get_asset_hub_batchall_by_block_num(substrate: SubstrateInterface, block_num: int):
+async def get_asset_hub_batchall_by_block_num(substrate: SubstrateInterface, block_num: int):
     res = []
     try:
         block_hash = substrate.get_block_hash(block_num)
@@ -32,34 +32,27 @@ def get_asset_hub_batchall_by_block_num(substrate: SubstrateInterface, block_num
             issuer = "162aMTRcXF27yNeNE82SfZj5KWH94sBtivvy7a5uef2ry81r"
             # 如果签名地址是singer = tx.value.get("address")
             if tx.value.get("address") == issuer and tx.value.get("call").get("call_function") == "batch_all":
-                    # and tx.value.get("call").get("call_module") == "Assets":
-                # 是dota转账 fixme 还有其他资产
-                # asset_id = int(tx.value.get("call")["call_args"][0]["value"])
-                # if asset_id == 1984 or asset_id == 1337 or asset_id == 18:
-                    # 目标地址
-                    # dest = tx.value.get("call")["call_args"][1]["value"]
-                    # # 金额
-                    # amt = tx.value.get("call")["call_args"][2]["value"]
-                    # 金额必须大于0
-                    # if amt > 0:
-                    #     singer = tx.value.get("address")
+
                 extrinsic_hash = tx.value["extrinsic_hash"]
                 #     print("dest: ", dest)
                 receipt = ExtrinsicReceipt(substrate, extrinsic_hash=extrinsic_hash,
                                             block_hash=block_hash,
                                             block_number=block_num,
                                             extrinsic_idx=index, finalized=True)
-                    # if asset_id == 18:
-                    #     tick = "dota"
-                    # elif asset_id == 1984:
-                    #     tick = "usdt"
-                    # elif asset_id == 1337:
-                    #     tick = "usdc"
-                    # else:
-                    #     raise Exception("不是支持的tick")
-                    # print(receipt.is_success)
-                    # print(os.getenv("BROKER_ADDRESS"))
+
                 if receipt.is_success:
+                    batch_all = tx.value.get("call")["call_args"][0]["value"]
+                    for mint in batch_all[:-1]:
+                        if mint["call_function"] == "mint":
+                            call_args = mint["call_args"]
+                            dest = call_args[1]["value"]
+                            amount = call_args[2]["value"]
+                            print(f"user:{dest}, amount: {amount}")
+                            async with async_session() as session:
+                                async with session.begin():
+                                    stmt = insert(AlreadyAirdrop).values({"account": dest, "amount": amount, "extrinsic_hash": extrinsic_hash})
+                                    await session.execute(stmt)
+
                     print("extrinsic_hash:", extrinsic_hash)
                     res.append(extrinsic_hash)
 
@@ -94,12 +87,13 @@ async def get_success_hash_but_fail_in_mysql(hash: str):
 async def main():
     s = connect_substrate()
     num = 6033389
-    end = 6035968
+    end = 6033389
+    # end = 6035968
     result = []
     while num <= end:
         try:
             print("区块高度：", num)
-            hashes = get_asset_hub_batchall_by_block_num(s, num)
+            hashes = await get_asset_hub_batchall_by_block_num(s, num)
             print(hashes)
             for hash in hashes:
                 res = await get_success_hash_but_fail_in_mysql(hash)
