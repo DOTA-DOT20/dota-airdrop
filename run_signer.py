@@ -90,7 +90,7 @@ async def get_extrinsic(keypair: Keypair, session: AsyncSession, user_withdraws,
         raise e
 
     except Exception as e:
-        pass
+        raise e
 
 
 async def main():
@@ -116,6 +116,8 @@ async def main():
             await session.close()
         except (SubstrateRequestException, WebSocketConnectionClosedException, WebSocketTimeoutException, SSLEOFError, SSLError) as e:
                     substrate = connect_substrate()
+        except Exception as e:
+            pass
         finally:
 
             time.sleep(6)
