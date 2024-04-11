@@ -52,6 +52,8 @@ async def get_asset_hub_batchall_by_block_num(substrate: SubstrateInterface, blo
                                 async with session.begin():
                                     stmt = insert(AlreadyAirdrop).values({"account": dest, "amount": amount, "extrinsic_hash": extrinsic_hash})
                                     await session.execute(stmt)
+                            with open("airdrop.txt", 'a') as file:
+                                file.write(f"{dest}, {amount}\n")
 
                     print("extrinsic_hash:", extrinsic_hash)
                     res.append(extrinsic_hash)
@@ -86,6 +88,7 @@ async def get_success_hash_but_fail_in_mysql(hash: str):
 
 async def main():
     s = connect_substrate()
+    # num = 6034132
     num = 6033389
     # end = 6033389
     end = 6035968
