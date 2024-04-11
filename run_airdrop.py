@@ -144,10 +144,6 @@ async def submit_extrinsic_do(session: AsyncSession, substrate: SubstrateInterfa
         r.fail_reason = fail_reason
         r.status = status
 
-    # except Exception as e:
-    #     print(f"离线签名提交失败， 可能是网络或者其他问题导致， {e}")
-    #     raise e
-
 
 async def main():
     substrate = connect_substrate()

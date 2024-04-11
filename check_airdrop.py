@@ -48,10 +48,10 @@ async def get_asset_hub_batchall_by_block_num(substrate: SubstrateInterface, blo
                             dest = call_args[1]["value"]
                             amount = call_args[2]["value"]
                             print(f"user:{dest}, amount: {amount}")
-                            async with async_session() as session:
-                                async with session.begin():
-                                    stmt = insert(AlreadyAirdrop).values({"account": dest, "amount": amount, "extrinsic_hash": extrinsic_hash})
-                                    await session.execute(stmt)
+                            # async with async_session() as session:
+                            #     async with session.begin():
+                            #         stmt = insert(AlreadyAirdrop).values({"account": dest, "amount": amount, "extrinsic_hash": extrinsic_hash})
+                            #         await session.execute(stmt)
                             with open("airdrop.txt", 'a') as file:
                                 file.write(f"{dest}, {amount}\n")
 
