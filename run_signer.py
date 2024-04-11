@@ -30,26 +30,8 @@ def get_keypair(substrate: SubstrateInterface, seed):
 
 # 签名用户提币交易并入库
 # user_withdra 必须有值
-async def get_extrinsic(keypair: Keypair, session: AsyncSession, user_withdraws, substrate: SubstrateInterface):
-    calls = []
-    users = []
+async def get_extrinsic(keypair: Keypair, session: AsyncSession, substrate: SubstrateInterface, calls: list, users: list):
     try:
-        for user_withdraw in user_withdraws:
-            print("user: ", user_withdraw.account)
-
-            user_transfer_call = substrate.compose_call(
-                call_module="Assets",
-                call_function="mint",
-                call_params= {
-                    "id": 18,
-                    "beneficiary": user_withdraw.account,
-                    "amount": int(user_withdraw.amount * 10000)
-                }
-            )
-
-            users.append(user_withdraw.account)
-            calls.append(user_transfer_call)
-
         if len(calls) > 0:
             user_remark_call = substrate.compose_call(
                 call_module='System',
@@ -115,7 +97,27 @@ async def main():
                         .limit(25) \
                         .with_for_update(read=False, nowait=False)
                     user_withdraws = await session.scalars(stmt)
-                    await get_extrinsic(keypair, session, user_withdraws, substrate)
+                    calls = []
+                    users = []
+                    for user_withdraw in user_withdraws:
+                        print("user: ", user_withdraw.account)
+
+                        user_transfer_call = substrate.compose_call(
+                            call_module="Assets",
+                            call_function="mint",
+                            call_params={
+                                "id": 18,
+                                "beneficiary": user_withdraw.account,
+                                "amount": int(user_withdraw.amount * 10000)
+                            }
+                        )
+
+                        users.append(user_withdraw.account)
+                        calls.append(user_transfer_call)
+
+            async with async_session() as session:
+                async with session.begin():
+                    await get_extrinsic(keypair, session, substrate, calls, users)
 
             await session.close()
         except (SubstrateRequestException, WebSocketConnectionClosedException, WebSocketTimeoutException, SSLEOFError, SSLError) as e:
