@@ -125,7 +125,7 @@ async def submit_extrinsic_do(session: AsyncSession, substrate: SubstrateInterfa
         print(e)
         raise e
 
-    except (KeyboardInterrupt, SubstrateRequestException) as e:
+    except KeyboardInterrupt as e:
 
         print("离线提交出现异常：", e)
         stmt = select(Airdrop).where(Airdrop.extrinsic_hash == extrinsic_hash)
@@ -134,6 +134,14 @@ async def submit_extrinsic_do(session: AsyncSession, substrate: SubstrateInterfa
             r.fail_reason = str(e)[:40]
             r.status = status
         exit(0)
+    except SubstrateRequestException as e:
+        print("离线提交出现异常：", e)
+        stmt = select(Airdrop).where(Airdrop.extrinsic_hash == extrinsic_hash)
+        result = await session.scalars(stmt)
+        for r in result:
+            r.fail_reason = str(e)[:40]
+            r.status = status
+        return None
     except Exception as e:
         print("未知异常:", e)
         raise e
