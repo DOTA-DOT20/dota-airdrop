@@ -87,8 +87,8 @@ async def get_success_hash_but_fail_in_mysql(hash: str):
 async def main():
     s = connect_substrate()
     num = 6033389
-    end = 6033389
-    # end = 6035968
+    # end = 6033389
+    end = 6035968
     result = []
     while num <= end:
         try:
