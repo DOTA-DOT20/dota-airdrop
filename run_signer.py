@@ -89,6 +89,9 @@ async def get_extrinsic(keypair: Keypair, session: AsyncSession, user_withdraws,
     except (SubstrateRequestException, WebSocketConnectionClosedException, WebSocketTimeoutException, SSLEOFError, SSLError) as e:
         raise e
 
+    except Exception as e:
+        pass
+
 
 async def main():
     # asset_hub链

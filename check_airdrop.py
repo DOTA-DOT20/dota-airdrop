@@ -48,20 +48,19 @@ async def get_asset_hub_batchall_by_block_num(substrate: SubstrateInterface, blo
                             dest = call_args[1]["value"]
                             amount = call_args[2]["value"]
                             print(f"user:{dest}, amount: {amount}")
-                            # async with async_session() as session:
-                            #     async with session.begin():
-                            #         stmt = insert(AlreadyAirdrop).values({"account": dest, "amount": amount, "extrinsic_hash": extrinsic_hash})
-                            #         await session.execute(stmt)
+                            async with async_session() as session:
+                                async with session.begin():
+                                    stmt = insert(Airdrop).where(Airdrop.extrinsic_hash == extrinsic_hash)
+                                    rs = await session.scalars(stmt)
+                                    for r in rs:
+                                        # 把状态改成成功
+                                        r.status = 4
                             with open("airdrop.txt", 'a') as file:
                                 file.write(f"{dest}, {amount}\n")
 
                     print("extrinsic_hash:", extrinsic_hash)
                     res.append(extrinsic_hash)
 
-                    # r = {"block_num": block_num, "tx_hash": extrinsic_hash,
-                    #  "extrinsic_index": index, "from": singer, "to": dest, "tick": tick,
-                    #  "amt": amt, "status": 0}
-                    # res.append(r)
         return res
     except (SubstrateRequestException, WebSocketConnectionClosedException, WebSocketTimeoutException, WebSocketException, WebSocketBadStatusException) as e:
         raise e
@@ -111,6 +110,27 @@ async def main():
     for r in result:
         amount += r[1]
     print(f"数据库失败或者异常，但是链上成功的金额有: {amount}")
+
+    # 把状态是10的，全部改成0
+    while True:
+        async with async_session() as session:
+            async with session.begin():
+                stmt = select(Airdrop).where(Airdrop.status == 10)
+                res = await session.scalar(stmt)
+                if res is None:
+                    break
+                res.status = 0
+
+    # 对账
+    async with async_session() as session:
+        async with session.begin():
+            stmt = select(func.sum(Airdrop.amount)).where(Airdrop.status == 4)
+            amount = await session.scalar(stmt)
+            if int(amount) == 18312933206:
+                print("对账成功")
+            else:
+                exit("对账失败，请重新对账")
+
 
 async def test():
     async with async_session() as session:

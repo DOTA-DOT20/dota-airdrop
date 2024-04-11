@@ -166,8 +166,9 @@ async def main():
             except Exception as e:
                 continue
         except Exception as e:
-            print("异常:", e)
-            raise e
+            # print("异常:", e)
+            # raise e
+            pass
         time.sleep(6)
 
 
