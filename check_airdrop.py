@@ -88,12 +88,11 @@ async def get_success_hash_but_fail_in_mysql(hash: str):
 
 async def main():
     s = connect_substrate()
-    # num = 6034132
-    num = 6033389
-    # end = 6033389
-    end = 6035968
     result = []
-    while num <= end:
+    _range1 = list(range(6033389, 6033657))
+    _range2 = list(range(6035918, 6035969))
+    _range1.extend(_range2)
+    for num in _range1:
         try:
             print("区块高度：", num)
             hashes = await get_asset_hub_batchall_by_block_num(s, num)
@@ -102,8 +101,6 @@ async def main():
                 res = await get_success_hash_but_fail_in_mysql(hash)
                 if len(res) > 0:
                     result.append(res)
-            # 查询该交易hash有没有在数据库中，并且状态是10或者3
-            num += 1
         except (SubstrateRequestException, WebSocketConnectionClosedException, WebSocketTimeoutException, WebSocketException, WebSocketBadStatusException) as e:
             try:
                 s = connect_substrate()
@@ -115,6 +112,12 @@ async def main():
         amount += r[1]
     print(f"数据库失败或者异常，但是链上成功的金额有: {amount}")
 
+async def test():
+    async with async_session() as session:
+        async with session.begin():
+            stmt = select(func.sum(AlreadyAirdrop.amount)).where(1==1)
+            res = await session.scalar(stmt)
+            print("res:", res)
 
 if __name__ == "__main__":
     asyncio.run(main(), debug=True)
