@@ -121,7 +121,7 @@ async def submit_extrinsic_do(session: AsyncSession, substrate: SubstrateInterfa
     except KeyboardInterrupt as e:
 
         print("离线提交出现异常：", e)
-        stmt = select(Airdrop).where(Airdrop.extrinsic_hash == extrinsic_hash)
+        stmt = select(Airdrop).where(Airdrop.extrinsic_hash == extrinsic_hash).with_for_update(read=False, nowait=False)
         result = await session.scalars(stmt)
         for r in result:
             r.fail_reason = str(e)[:40]
@@ -129,7 +129,7 @@ async def submit_extrinsic_do(session: AsyncSession, substrate: SubstrateInterfa
         exit(0)
     except SubstrateRequestException as e:
         print("离线提交出现异常：", e)
-        stmt = select(Airdrop).where(Airdrop.extrinsic_hash == extrinsic_hash)
+        stmt = select(Airdrop).where(Airdrop.extrinsic_hash == extrinsic_hash).with_for_update(read=False, nowait=False)
         result = await session.scalars(stmt)
         for r in result:
             r.fail_reason = str(e)[:40]
@@ -139,7 +139,7 @@ async def submit_extrinsic_do(session: AsyncSession, substrate: SubstrateInterfa
         print("未知异常:", e)
         raise e
 
-    stmt = select(Airdrop).where(Airdrop.extrinsic_hash == extrinsic_hash)
+    stmt = select(Airdrop).where(Airdrop.extrinsic_hash == extrinsic_hash).with_for_update(read=False, nowait=False)
     result = await session.scalars(stmt)
     for r in result:
         r.fail_reason = fail_reason
@@ -153,7 +153,7 @@ async def main():
         try:
             async with async_session() as session:
                 async with session.begin():
-                    stmt = select(Airdrop).where(Airdrop.status == 101)
+                    stmt = select(Airdrop).where(Airdrop.status == 101).with_for_update(read=False, nowait=False)
                     extrinsic = await session.scalar(stmt)
                     if extrinsic is None:
                         print("没有等待发送的签名交易")

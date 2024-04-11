@@ -84,14 +84,11 @@ async def main():
         try:
             async with async_session() as session:
                 async with session.begin():
-                    stmt = select(Airdrop).where(Airdrop.status == 101)
+                    stmt = select(Airdrop).where(Airdrop.status == 101).with_for_update(read=False, nowait=False)
                     if await session.scalar(stmt):
                         print("该用户已经有签名的交易，需要等待发送")
                         time.sleep(6)
                         continue
-
-            async with async_session() as session:
-                async with session.begin():
                     stmt = select(Airdrop).where(Airdrop.status == 0) \
                         .offset(0) \
                         .limit(25) \
