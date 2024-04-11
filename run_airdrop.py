@@ -95,21 +95,14 @@ def submit_extrinsic(substrate: SubstrateInterface, sign: dict, wait_for_inclusi
     return result
 
 
-async def submit_extrinsic_do(session: AsyncSession, substrate: SubstrateInterface):
+async def submit_extrinsic_do(session: AsyncSession, substrate: SubstrateInterface, signature: str, extrinsic_hash: str):
     # try:
     # 查询未发送的离线签名
     status = 10
-    stmt = select(Airdrop).where(Airdrop.status == 101)
-    extrinsic = await session.scalar(stmt)
-    if extrinsic is None:
-        print("没有等待发送的签名交易")
-        return None
-    extrinsic_hash = extrinsic.extrinsic_hash
-    data = extrinsic.signature
     fail_reason = ""
     try:
         print("extrinsic:", extrinsic_hash)
-        receipt = submit_extrinsic(substrate, {"data": data, "extrinsic_hash":
+        receipt = submit_extrinsic(substrate, {"data": signature, "extrinsic_hash":
                     extrinsic_hash}, wait_for_inclusion=True, wait_for_finalization=True)
         print("回执是: ", receipt)
         print(receipt.triggered_events)
@@ -156,10 +149,22 @@ async def submit_extrinsic_do(session: AsyncSession, substrate: SubstrateInterfa
 async def main():
     substrate = connect_substrate()
     while True:
+
         try:
             async with async_session() as session:
                 async with session.begin():
-                    await submit_extrinsic_do(session, substrate)
+                    stmt = select(Airdrop).where(Airdrop.status == 101)
+                    extrinsic = await session.scalar(stmt)
+                    if extrinsic is None:
+                        print("没有等待发送的签名交易")
+                        continue
+                    extrinsic_hash = extrinsic.extrinsic_hash
+                    data = extrinsic.signature
+
+            async with async_session() as session:
+                async with session.begin():
+                    await submit_extrinsic_do(session, substrate, signature=data, extrinsic_hash=extrinsic_hash)
+
         except (WebSocketConnectionClosedException, WebSocketTimeoutException, SSLEOFError, SSLError) as e:
             try:
                 substrate = connect_substrate()
