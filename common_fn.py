@@ -8,6 +8,7 @@ from scalecodec.types import GenericExtrinsic
 
 from redis import Redis
 from base import *
+import random
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, AsyncEngine
 from sqlalchemy import select, insert
 import json
@@ -19,8 +20,10 @@ load_dotenv()
 
 
 def connect_substrate() -> SubstrateInterface:
+    urls = list({"wss://polkadot-asset-hub-rpc.polkadot.io", "wss://statemint-rpc.dwellir.com",
+                 "wss://rpc-asset-hub-polkadot.luckyfriday.io", os.getenv("URL")})
     try:
-        url = os.getenv("URL")
+        url = random.choice(urls)
         substrate = SubstrateInterface(
             url=url,
         )
