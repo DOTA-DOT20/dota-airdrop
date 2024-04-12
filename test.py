@@ -23,5 +23,7 @@ import asyncio
 # if __name__ == "__main__":
 #     asyncio.run(main(), debug=True)
 
-a = range(1, 100)
-print(list(a))
+urls = list({"wss://polkadot-asset-hub-rpc.polkadot.io", "wss://statemint-rpc.dwellir.com",
+                 "wss://rpc-asset-hub-polkadot.luckyfriday.io", os.getenv("URL")})
+
+print(urls)
